@@ -8,6 +8,9 @@ import com.driver.repository.WebSeriesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 public class WebSeriesService {
 
@@ -24,6 +27,24 @@ public class WebSeriesService {
         //use function written in Repository Layer for the same
         //Dont forget to save the production and webseries Repo
 
+        WebSeries webSeries=new WebSeries();
+        WebSeries webSeries1=webSeriesRepository.findBySeriesName(webSeriesEntryDto.getSeriesName());
+        if(webSeries1 != null && webSeriesRepository.existsById(webSeries1.getId())) throw new Exception("Series is already present");
+
+        webSeries.setSeriesName(webSeriesEntryDto.getSeriesName());
+        webSeries.setAgeLimit(webSeriesEntryDto.getAgeLimit());
+        webSeries.setRating(webSeriesEntryDto.getRating());
+        webSeries.setSubscriptionType(webSeriesEntryDto.getSubscriptionType());
+        Optional<ProductionHouse> productionHouse=productionHouseRepository.findById(webSeriesEntryDto.getProductionHouseId());
+        if(!productionHouse.isPresent()) return null;
+        List<WebSeries> webSeriesList=productionHouse.get().getWebSeriesList();
+        webSeriesList.add(webSeries);
+        double rating=0;
+        for(WebSeries webSeries2 :webSeriesList){
+            rating+=webSeries2.getRating();
+        }
+        productionHouse.get().setRatings(rating/webSeriesList.size());
+        productionHouseRepository.save(productionHouse.get());
         return null;
     }
 
